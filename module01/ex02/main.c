@@ -12,7 +12,5 @@ int main()
     ICR1 = F_CPU / 1024UL - 1; // TOP value → sets PWM period (timer counts to ICR1)
     OCR1A = (uint32_t)ICR1 * duty / 100; // duty cycle → ON time proportional to ICR1
 
-    TCCR1B |= (1 << CS12) | (1 << CS10); // start timer with prescaler 1024
-
     while (1); // empty loop, all PWM generation handled by hardware
 }
