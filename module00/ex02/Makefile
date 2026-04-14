@@ -7,7 +7,7 @@ CC = avr-gcc
 OBJCOPY = avr-objcopy
 AVRDUDE = avrdude
 
-CFLAGS = -mmcu=$(MCU) -Os -DF_CPU=$(F_CPU) -nostdlib
+CFLAGS = -mmcu=$(MCU) -Os -DF_CPU=$(F_CPU)
 
 all: hex flash
 
