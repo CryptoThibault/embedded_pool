@@ -1,26 +1,18 @@
 #include <avr/io.h>
-#include <avr/interrupt.h>
-
-ISR(TIMER1_COMPA_vect)
-{
-    static unsigned int ms = 0;
-
-    if (++ms < 100) PORTB |= (1 << PB1);   // LED ON for 100 ms
-    else PORTB &= ~(1 << PB1);  // LED OFF for 900 ms
-
-    if (ms >= 1000) ms = 0; // reset cycle every 1s
-}
 
 int main()
 {
-    DDRB |= (1 << PB1); // set PB1 as output (LED)
+    uint8_t duty = 10;
 
-    TCCR1A = 0; // normal mode (no PWM)
-    TCCR1B = (1 << WGM12) | (1 << CS11) | (1 << CS10); // CTC mode + prescaler 64
-    OCR1A = 249; // 1 ms compare match value
-    TIMSK1 = (1 << OCIE1A); // enable Timer1 compare interrupt
+    DDRB |= (1 << PB1); // set PB1 (OC1A) as output pin for LED
 
-    sei(); // enable global interrupts
+    TCCR1A = (1 << COM1A1) | (1 << WGM11); // PWM non-inverting on OC1A + mode 14 (part 1)
+    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10); // mode 14 (part 2) + prescaler 1024
 
-    while (1); // empty loop, everything handled by hardware + ISR
+    ICR1 = F_CPU / 1024UL - 1; // TOP value → sets PWM period (timer counts to ICR1)
+    OCR1A = (uint32_t)ICR1 * duty / 100; // duty cycle → ON time proportional to ICR1
+
+    TCCR1B |= (1 << CS12) | (1 << CS10); // start timer with prescaler 1024
+
+    while (1); // empty loop, all PWM generation handled by hardware
 }

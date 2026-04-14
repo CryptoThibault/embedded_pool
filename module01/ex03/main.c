@@ -1,21 +1,9 @@
 #include <avr/io.h>
-#include <avr/interrupt.h>
 #include <util/delay.h>
-
-volatile uint8_t duty = 50;
-
-ISR(TIMER1_COMPA_vect)
-{
-    static unsigned int ms = 0; // time counter (ms)
-
-    if (++ms < duty * 10) PORTB |= (1 << PB1); // LED ON during duty time
-    else PORTB &= ~(1 << PB1); // LED OFF otherwise
-
-    if (ms >= 1000) ms = 0; // reset 1s cycle
-}
 
 int main()
 {
+    uint8_t duty = 10;
     uint8_t prev1 = 1;  // previous state SW1 (pull-up = 1 idle)
     uint8_t prev2 = 1;  // previous state SW2
 
@@ -23,15 +11,15 @@ int main()
 
     DDRD &= ~((1<<PD2)|(1<<PD4)); // set buttons as input
 
-    TCCR1A = 0; // normal mode (no PWM)
-    TCCR1B = (1 << WGM12) | (1 << CS11) | (1 << CS10); // CTC mode + prescaler 64
-    OCR1A = 249; // 1 ms compare match value
-    TIMSK1 = (1 << OCIE1A); // enable Timer1 compare interrupt
+    TCCR1A = (1 << COM1A1) | (1 << WGM11); // non-inverting PWM mode (clear on compare, set at BOTTOM)
+    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10); // Fast PWM mode 14 + prescaler 1024
 
-    sei(); // enable global interrupts
-
+    ICR1 = F_CPU / 1024UL - 1; // set TOP for 1 Hz PWM period (1 second)
+    
     while (1)
     {
+        OCR1A = (uint32_t)ICR1 * duty / 100; // set duty cycle
+
         uint8_t current1 = (PIND & (1<<PD2)) ? 1 : 0; // read SW1
         uint8_t current2 = (PIND & (1<<PD4)) ? 1 : 0; // read SW2
 
