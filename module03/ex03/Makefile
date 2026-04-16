@@ -8,19 +8,30 @@ CC = avr-gcc
 OBJCOPY = avr-objcopy
 AVRDUDE = avrdude
 
-CFLAGS = -mmcu=$(MCU) -Os -DF_CPU=$(F_CPU) -DUART_BAUDRATE=$(UART_BAUDRATE)
+CFLAGS = -mmcu=$(MCU) -Os -DF_CPU=$(F_CPU) -DUART_BAUDRATE=$(UART_BAUDRATE) \
+         -Iinclude
+
+SRCS = src/main.c src/uart.c src/rgb.c src/hex.c
+OBJS = $(SRCS:src/%.c=obj/%.o)
 
 all: hex flash
 
-hex: $(TARGET).c
-	$(CC) $(CFLAGS) -o $(TARGET).bin $(TARGET).c
-	$(OBJCOPY) -O binary $(TARGET).bin $(TARGET).hex
+obj/%.o: src/%.c
+	mkdir -p obj
+	$(CC) $(CFLAGS) -c $< -o $@
 
-flash: $(TARGET).hex
-	$(AVRDUDE) -c arduino -p m328p -P /dev/ttyUSB0 -b $(UART_BAUDRATE) -U flash:w:$(TARGET).hex
+$(TARGET).elf: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET).elf
+
+hex: $(TARGET).elf
+	$(OBJCOPY) -O ihex -R .eeprom $(TARGET).elf $(TARGET).hex
+
+flash: hex
+	$(AVRDUDE) -c arduino -p m328p -P /dev/ttyUSB0 -b $(UART_BAUDRATE) \
+	-U flash:w:$(TARGET).hex:i
 
 clean:
-	rm $(TARGET).bin
-	rm $(TARGET).hex
+	rm -rf obj
+	rm -f $(TARGET).elf $(TARGET).hex
 
 .PHONY: all hex flash clean

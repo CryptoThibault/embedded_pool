@@ -1,5 +1,4 @@
-#include <avr/io.h>
-#include <util/delay.h>
+#include "main.h"
 
 void init_rgb()
 {
@@ -12,6 +11,20 @@ void init_rgb()
     TCCR2B = (1 << CS22); // Set prescaler to 64 for Timer2 speed
 }
 
+void disable_rgb()
+{
+    // 1. disconnect PWM outputs FIRST
+    TCCR0A &= ~((1 << COM0A1) | (1 << COM0B1));
+    TCCR2A &= ~(1 << COM2B1);
+
+    // 2. stop timers completely
+    TCCR0B = 0;
+    TCCR2B = 0;
+
+    // 3. force pins LOW
+    PORTD &= ~((1 << PD5) | (1 << PD6) | (1 << PD3));
+}
+
 void set_rgb(uint8_t r, uint8_t g, uint8_t b)
 {
     OCR0B = r; // Red brightness (0 = off, 255 = max)
@@ -19,37 +32,13 @@ void set_rgb(uint8_t r, uint8_t g, uint8_t b)
     OCR2B = b; // Blue brightness (0 = off, 255 = max)
 }
 
-void wheel(uint8_t pos)
+void rgb_filter(uint8_t *rgb)
 {
-    pos = 255 - pos;
-
-    if (pos < 85)
+    for (uint8_t i = 0; i < 3; i++)
     {
-        set_rgb(255 - pos * 3, 0, pos * 3);
-    }
-    else if (pos < 170)
-    {
-        pos = pos - 85;
-        set_rgb(0, pos * 3, 255 - pos * 3);
-    }
-    else
-    {
-        pos = pos - 170;
-        set_rgb(pos * 3, 255 - pos * 3, 0);
-    }
-}
-
-int main()
-{
-    uint8_t pos = 0;
-
-    DDRD |= (1 << PD5) | (1 << PD6) | (1 << PD3);
-
-    init_rgb();
-
-    while (1)
-    {
-        wheel(pos++);
-        _delay_ms(50);
+        if (rgb[i] < 5)
+            rgb[i] = 0;
+        else
+            rgb[i] = (rgb[i] * rgb[i]) / 255;
     }
 }
