@@ -1,4 +1,5 @@
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 void uart_init()
 {
@@ -29,34 +30,31 @@ void uart_printstr(const char* str)
     }
 }
 
-void wdt_disable_early() __attribute__((naked)) __attribute__((section(".init3"))); 
-// Place this function in the .init3 section so it runs before main(), without prologue/epilogue
-
-void wdt_disable_early()
+void timer1_init(void)
 {
-    MCUSR = 0; // Clear reset flags (important after watchdog reset to avoid misbehavior)
+    TCCR1A = 0;                               // mode normal
+    TCCR1B = (1 << WGM12);                    // CTC mode
 
-    WDTCSR = (1 << WDCE) | (1 << WDE); // Enable timed window to modify WDT (must be done before changing configuration)
+    TCCR1B |= (1 << CS12) | (1 << CS10);      // prescaler 1024
 
-    WDTCSR = 0x00; // Disable watchdog completely to prevent immediate reset loop
+    OCR1A = F_CPU / 1024UL * 2;               // 2000 toggle
+
+    TIMSK1 |= (1 << OCIE1A);                  // enable interrupt
 }
 
-void wdt_init()
+void TIMER1_COMPA_vect(void) __attribute__((signal));
+
+void TIMER1_COMPA_vect(void)
 {
-    MCUSR = 0; // Clear reset flags
-    
-    WDTCSR = (1 << WDCE) | (1 << WDE); // Enable change
-    
-    WDTCSR = (1 << WDE) | (1 << WDP2) | (1 << WDP1) | (1 << WDP0); // Set prescaler for ~2s + enable reset
+    uart_printstr("Hello World!\n\r");
 }
 
 int main()
 {
     uart_init();
+    timer1_init();
 
-    uart_printstr("Hello World!\n\r");
-
-    wdt_init(); // Watchdog Timer
+    SREG |= (1 << 7); // sei()
 
     while(1);
 }

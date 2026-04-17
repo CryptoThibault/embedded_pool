@@ -10,7 +10,8 @@ void uart_init()
     UBRR0L = ubrr;        // Set low byte of baud rate register
 
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00); // Configure frame format: 8 data bits, no parity, 1 stop bit (8N1)
-    UCSR0B = (1 << TXEN0) | (1 << RXEN0); // Enable UART transmitter and receiver (TX and RX hardware active, allows sending and receiving data)
+    // Enable UART transmitter, receiver and interupt (TX and RX hardware active, allows sending and receiving data)
+    UCSR0B = (1 << TXEN0) | (1 << RXEN0) | (1 << RXCIE0);
 }
 
 void uart_tx(char c)
@@ -27,25 +28,23 @@ char uart_rx()
     return UDR0; // read received byte
 }
 
-void wdt_reset()
-{   
-    WDTCSR = (1 << WDCE) | (1 << WDE); // Enable change
-    
-    WDTCSR = (1 << WDE); // Enable WDT with shortest timeout (~16ms)
-}
+void USART_RX_vect(void) __attribute__((signal, used));
 
-int main()
+void USART_RX_vect(void)
 {
-    uart_init();
-
     char c = uart_rx();
 
     if (c >= 65 && c <= 90) c += 32;
     else if (c >= 97 && c <= 122) c -= 32;
 
     uart_tx(c);
+}
 
-    wdt_reset();
+int main()
+{
+    uart_init();
+
+    SREG |= (1 << 7); // sei()
 
     while (1);
 }
