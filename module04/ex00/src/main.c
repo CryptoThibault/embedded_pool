@@ -5,7 +5,7 @@
 
 volatile uint8_t debounce_lock = 0;
 
-void timer1_init()
+void timer1_init(void)
 {
     TCCR1A = 0;
 
@@ -15,7 +15,16 @@ void timer1_init()
     TIMSK1 &= ~(1 << OCIE1A); // disable interrupt initially
 }
 
-void debounce_start()
+void TIMER1_COMPA_vect(void) __attribute__((signal));
+
+void TIMER1_COMPA_vect(void)
+{
+    debounce_lock = 0;
+
+    TIMSK1 &= ~(1 << OCIE1A); // stop timer interrupt
+}
+
+void debounce_start(void)
 {
     debounce_lock = 1;
 
@@ -27,7 +36,7 @@ void debounce_start()
     TIMSK1 |= (1 << OCIE1A);   // enable compare interrupt
 }
 
-void int0_init()
+void int0_init(void)
 {
     DDRD &= ~(1 << PD2);
     PORTD |= (1 << PD2);
@@ -39,7 +48,9 @@ void int0_init()
     EIMSK |= (1 << INT0);
 }
 
-ISR(INT0_vect)
+void INT0_vect(void) __attribute__((signal, used));
+
+void INT0_vect(void)
 {
     static uint8_t button_state = 0;
 
@@ -60,21 +71,14 @@ ISR(INT0_vect)
     }
 }
 
-ISR(TIMER1_COMPA_vect)
-{
-    debounce_lock = 0;
-
-    TIMSK1 &= ~(1 << OCIE1A); // stop timer interrupt
-}
-
-int main()
+int main(void)
 {
     DDRB |= (1 << PB0);
 
     timer1_init();
     int0_init();
 
-    sei();
+    SREG |= (1 << 7); // sei()
 
     while (1);
 }

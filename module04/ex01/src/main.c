@@ -1,7 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-void timer0_init()
+void timer0_init(void)
 {
     TCCR0A = (1 << WGM01); // CTC mode
     TCCR0B = (1 << CS01) | (1 << CS00); // prescaler 64
@@ -11,10 +11,8 @@ void timer0_init()
     TIMSK0 |= (1 << OCIE0A); // enable interrupt
 }
 
-void timer1_init()
+void timer1_init(void)
 {
-    DDRB |= (1 << PB1); // OC1A en sortie
-
     // Fast PWM 8-bit
     TCCR1A = (1 << WGM10) | (1 << COM1A1);
     TCCR1B = (1 << WGM12);
@@ -24,7 +22,9 @@ void timer1_init()
     OCR1A = 0; // duty initial
 }
 
-ISR(TIMER0_COMPA_vect)
+void TIMER0_COMPA_vect(void) __attribute__((signal));
+
+void TIMER0_COMPA_vect(void)
 {
     static uint16_t acc = 0;
     static int8_t step = 1;
@@ -42,12 +42,14 @@ ISR(TIMER0_COMPA_vect)
     }
 }
 
-int main()
+int main(void)
 {
+    DDRB |= (1 << PB1);
+
     timer0_init();
     timer1_init();
 
-    sei();
+    SREG |= (1 << 7); // sei()
 
     while (1);
 }

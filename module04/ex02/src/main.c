@@ -6,17 +6,7 @@
 volatile uint8_t value = 0;
 volatile uint8_t debounce_lock = 0;
 
-void displayBinary(uint8_t v)
-{
-    PORTB &= ~((1<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB4)); // clear LED pins (PB0,PB1,PB2,PB4)
-
-    PORTB |= (v & 1) << PB0;        // bit0 -> PB0
-    PORTB |= ((v >> 1) & 1) << PB1; // bit1 -> PB1
-    PORTB |= ((v >> 2) & 1) << PB2; // bit2 -> PB2
-    PORTB |= ((v >> 3) & 1) << PB4; // bit3 -> PB4
-}
-
-void timer1_init()
+void timer1_init(void)
 {
     TCCR1A = 0;
 
@@ -26,7 +16,16 @@ void timer1_init()
     TIMSK1 &= ~(1 << OCIE1A); // disable interrupt initially
 }
 
-void debounce_start()
+void TIMER1_COMPA_vect(void) __attribute__((signal));
+
+void TIMER1_COMPA_vect(void)
+{
+    debounce_lock = 0;
+
+    TIMSK1 &= ~(1 << OCIE1A); // stop timer interrupt
+}
+
+void debounce_start(void)
 {
     debounce_lock = 1;
 
@@ -38,7 +37,17 @@ void debounce_start()
     TIMSK1 |= (1 << OCIE1A);   // enable compare interrupt
 }
 
-void int0_init()
+void displayBinary(uint8_t v)
+{
+    PORTB &= ~((1<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB4)); // clear LED pins (PB0,PB1,PB2,PB4)
+
+    PORTB |= (v & 1) << PB0;        // bit0 -> PB0
+    PORTB |= ((v >> 1) & 1) << PB1; // bit1 -> PB1
+    PORTB |= ((v >> 2) & 1) << PB2; // bit2 -> PB2
+    PORTB |= ((v >> 3) & 1) << PB4; // bit3 -> PB4
+}
+
+void int0_init(void)
 {
     DDRD &= ~(1 << PD2);
     PORTD |= (1 << PD2);
@@ -50,16 +59,9 @@ void int0_init()
     EIMSK |= (1 << INT0);
 }
 
-void pcint2_init()
-{
-    DDRD &= ~(1 << PD4);
-    PORTD |= (1 << PD4);
+void INT0_vect(void) __attribute__((signal, used));
 
-    PCICR |= (1 << PCIE2);      // enable interrupt group for PORTD
-    PCMSK2 |= (1 << PCINT20);   // enable PD4 interrupt
-}
-
-ISR(INT0_vect)
+void INT0_vect(void)
 {
     static uint8_t button_state = 0;
 
@@ -81,7 +83,18 @@ ISR(INT0_vect)
     }
 }
 
-ISR(PCINT2_vect)
+void pcint2_init(void)
+{
+    DDRD &= ~(1 << PD4);
+    PORTD |= (1 << PD4);
+
+    PCICR |= (1 << PCIE2);      // enable interrupt group for PORTD
+    PCMSK2 |= (1 << PCINT20);   // enable PD4 interrupt
+}
+
+void PCINT2_vect(void) __attribute__((signal, used));
+
+void PCINT2_vect(void)
 {
     static uint8_t button_state = 0;
 
@@ -103,14 +116,7 @@ ISR(PCINT2_vect)
     }
 }
 
-ISR(TIMER1_COMPA_vect)
-{
-    debounce_lock = 0;
-
-    TIMSK1 &= ~(1 << OCIE1A); // stop timer interrupt
-}
-
-int main()
+int main(void)
 {
     DDRB |= (1<<PB0)|(1<<PB1)|(1<<PB2)|(1<<PB4);
 
@@ -118,7 +124,7 @@ int main()
     int0_init();
     pcint2_init();
 
-    sei();
+    SREG |= (1 << 7); // sei()
 
     while (1);
 }
