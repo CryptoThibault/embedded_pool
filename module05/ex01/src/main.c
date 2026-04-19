@@ -1,6 +1,6 @@
 #include "main.h"
 
-int main()
+int main(void)
 {
     uart_init();
     adc_init();
