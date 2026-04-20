@@ -28,6 +28,6 @@ int main(void)
             gauge(current);
             prev = current;
         }
+        _delay_ms(10);
     }
-    _delay_ms(10);
 }
