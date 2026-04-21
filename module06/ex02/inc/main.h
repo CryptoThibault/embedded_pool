@@ -32,3 +32,6 @@ void i2c_status(void);
 void i2c_write(unsigned char data);
 void i2c_read(void);
 void ath20_read(void);
+
+void buffer_add(float *buf, uint8_t count, float new_value);
+float buffer_avg(float *buf, uint8_t count);

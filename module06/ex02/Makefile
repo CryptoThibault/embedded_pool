@@ -12,7 +12,7 @@ AVRDUDE = avrdude
 CFLAGS = -mmcu=$(MCU) -Os -DF_CPU=$(F_CPU) -DUART_BAUDRATE=$(UART_BAUDRATE) \
          -Iinc
 
-SRCS = src/main.c src/i2c.c src/uart.c
+SRCS = src/main.c src/i2c.c src/uart.c src/buffer.c
 OBJS = $(SRCS:src/%.c=obj/%.o)
 
 all: hex flash
