@@ -6,7 +6,7 @@ int main()
 
     while (1)
     {
-        char buf[6];
+        char buf[BUFFER_SIZE];
         uint8_t i = 0;
     
         uart_printstr("> ");
@@ -38,30 +38,33 @@ int main()
             continue;
         }
 
-        if (buf[i] != ' ') error = 1;
+        if (buf[i] != ' ')
+        {
+            uart_printstr("Error: missing space\r\n");
+            continue;
+        }
+        i++;
 
-        if (!is_hex(buf[++i])) error = 1;
-        else data = hex_to_val(buf[i]) << 4;
-
-        if (!is_hex(buf[++i])) error = 1;
-        else data |= hex_to_val(buf[i]);
-
-        if (error)
+        if (!is_hex(buf[i]))
         {
             uart_printstr("Error: bad data\r\n");
+            continue;
         }
-        else
+
+        data = hex_to_val(buf[i++]);
+
+        if (is_hex(buf[i])) data = (data << 4) | hex_to_val(buf[i++]);
+
+        if (is_hex(buf[i]) || buf[i] != '\0')
         {
-            if (data != eeprom_read_byte((uint8_t*)addr))
-            {
-                eeprom_write_byte((uint8_t*)addr, data);
-                uart_printstr("WRITE\r\n");
-            }
-            else
-            {
-                uart_printstr("NO CHANGE\r\n");
-            }
-            //eeprom_hexdump();
+            uart_printstr("Error: bad data\r\n");
+            continue;
         }
+
+        if (data != eeprom_read_byte((uint8_t*)addr))
+            eeprom_write_byte((uint8_t*)addr, data);
+        else
+            addr = -1;
+        eeprom_hexdump(addr);
     }
 }

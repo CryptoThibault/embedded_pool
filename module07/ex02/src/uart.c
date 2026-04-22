@@ -65,15 +65,38 @@ uint8_t uart_line_process(char *buf, uint8_t *i)
     return 0;
 }
 
-void uart_print_hex8(uint8_t val)
+void uart_print_uint32(uint32_t val)
 {
-    const char hex[] = "0123456789abcdef";
-    uart_tx(hex[val >> 4]);
-    uart_tx(hex[val & 0x0F]);
+    char buf[11];
+    uint8_t i = 0;
+
+    if (val == 0)
+    {
+        uart_tx('0');
+        return;
+    }
+
+    while (val > 0)
+    {
+        buf[i++] = (val % 10) + '0';
+        val /= 10;
+    }
+
+    while (i > 0)
+    {
+        uart_tx(buf[--i]);
+    }
 }
 
-void uart_print_hex16(uint16_t val)
+void uart_print_int16(int16_t val)
 {
-    uart_print_hex8((val >> 8) & 0xFF);
-    uart_print_hex8(val & 0xFF);
+    if (val < 0)
+    {
+        uart_tx('-');
+        uart_print_uint32((uint16_t)(-val));
+    }
+    else
+    {
+        uart_print_uint32((uint16_t)val);
+    }
 }
