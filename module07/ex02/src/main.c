@@ -71,7 +71,7 @@ int main()
             char *arg = next_token(&p);
             uint32_t val;
 
-            if (!arg || !parse_u32(arg, &val) || val >= SLOT_COUNT)
+            if (!arg || !parse_u32(arg, &val) || val > SLOT_COUNT)
                 uart_printstr("ERROR: invalid debug slot\r\n");
             else
                 debug_fail_slot = (uint8_t)val;

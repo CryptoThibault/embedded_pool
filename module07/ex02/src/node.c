@@ -55,7 +55,9 @@ void relocate_node(void)
 {
     uint8_t start = slot;
 
-    for (uint8_t i = 1; i <= SLOT_COUNT; i++)
+    uart_printstr("Corruption detected.\r\n");
+
+    for (uint8_t i = 1; i < SLOT_COUNT; i++)
     {
         slot = (start + i) % SLOT_COUNT;
 
@@ -69,12 +71,13 @@ void relocate_node(void)
         if (save_node())
         {
             uart_printstr("Success\r\n");
+            uart_printstr("Done.\r\n");
             return;
         }
         uart_printstr("Fail\r\n");
         node.version = old_version;
     }
 
-    uart_printstr("CRITICAL EEPROM FAILURE\r\n");
+    uart_printstr("CRITICAL: EEPROM FAILURE\r\n");
     slot = SLOT_INVALID;
 }
