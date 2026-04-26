@@ -84,7 +84,6 @@ typedef enum
 extern volatile t_board board;
 extern volatile uint8_t events;
 extern volatile uint32_t ms;
-extern volatile uint8_t debounce_lock;
 
 void update_startup(void);
 void update_modes(void);
@@ -104,8 +103,6 @@ void uart_printstr(const char* str);
 void uart_print_hex8(uint8_t val);
 
 void timer0_init(void);
-void timer2_init(void);
-void debounce_start(void);
 
 void pcint_init(void);
 
@@ -135,7 +132,6 @@ void aht20_read(uint8_t buf[7]);
 void aht20_measure(void);
 
 void exp_init(void);
-uint16_t exp_read_gpio(void);
 
 void seg_display(uint8_t value);
 void seg_select(uint8_t digit);

@@ -12,7 +12,6 @@ int main(void)
     i2c_init();
     exp_init();
     timer0_init();
-    timer2_init();
     pcint_init();
 
     INTERUPT_ON;

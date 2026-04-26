@@ -23,21 +23,3 @@ void exp_init(void)
     i2c_write(0b0);
     i2c_stop();
 }
-
-uint16_t exp_read_gpio(void)
-{
-    uint8_t low, high;
-
-    i2c_start();
-    i2c_write(EXP_ADDR << 1  | TW_WRITE);
-    i2c_write(0x00);
-
-    i2c_start();
-    i2c_write((EXP_ADDR << 1) | TW_READ);
-    low = i2c_read_ack();
-
-    high = i2c_read_nack();
-    i2c_stop();
-
-    return ((uint16_t)high << 8) | low;
-}
