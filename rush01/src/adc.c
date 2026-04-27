@@ -13,13 +13,9 @@ uint16_t adc_read(uint8_t channel)
     while (ADCSRA & (1 << ADSC));
 
     if (channel <= 7)
-    {
         ADMUX = (1 << REFS0) | (channel & 0x0F);
-    }
     else if (channel == 8)
-    {
         ADMUX = (1 << REFS1) | (1 << REFS0) | (1 << MUX3);
-    }
 
     ADCSRA |= (1 << ADSC);
     while (ADCSRA & (1 << ADSC));

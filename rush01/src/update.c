@@ -19,11 +19,11 @@ void update_modes(void)
         case 0:
         case 1:
         case 2:
-            if (events & EVENT_TIMER)
+            if (events & EVENT_TIMER && ms % 10 == 0)
                 board.value = adc_read(board.mode);
             break;
         case 3:
-            if (events & EVENT_TIMER)
+            if (events & EVENT_TIMER && ms % 10 == 0)
                 board.value = adc_read(8);
             break;
         case 4:
