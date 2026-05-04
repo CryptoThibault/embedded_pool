@@ -1,7 +1,5 @@
 # Embedded Pool
 
-## Short Description
-
 This repository is an introduction to embedded systems through a sequence of AVR microcontroller exercises. Each module focuses on a core embedded topic, and each exercise explores that topic with concrete hardware examples: LEDs, buttons, timers, UART, ADC, I2C, SPI, EEPROM, and event-driven interaction.
 
 ## Table of Contents
